@@ -3,6 +3,7 @@
 import sys
 import getopt
 import logging
+import color_logs
 
 # Global options object
 options = {}
