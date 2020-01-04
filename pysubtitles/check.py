@@ -4,6 +4,7 @@ import sys
 import getopt
 import logging
 import color_logs
+import os.path
 
 # Global options object
 options = {}
@@ -15,19 +16,23 @@ def main():
     args = parse_options(sys.argv[1:])
     setupLogging()
 
-    log.debug('This is a debug message')
-    log.info('This is an info message')
-    log.warning('This is a warning message')
-    log.error('This is an error message')
-    log.critical('This is a critical message')
+    log.info(f'Starting {os.path.basename(__file__)}')
 
-    if len(args) != 1:
-        error("Invalid syntax")
-        usage()
-        sys.exit(2)
+    files = args
+    if not files:
+        log.warning("No files specified; I will do nothing.")
 
-    filename = args[0]
-    print("Checking file " + filename)
+    for f in files:
+        checkFile(f)
+
+
+def checkFile(f):
+    log.info(f'Checking file {f}')
+    if not os.path.exists(f):
+        log.warning(f'File {f} does not exist, skipping')
+        return
+    log.debug(f'File {f} exists, continuing.')
+
 
 
 def setupLogging():
@@ -49,9 +54,9 @@ def setupLogging():
 
 
 def usage():
-    print("""Usage: check.py <filename>
+    print("""Usage: check.py <files...>
 
-    This performs subtitle checks on the given file.
+    This performs subtitle checks on the given files.
 
     Options:
     -h              Show this help text.
