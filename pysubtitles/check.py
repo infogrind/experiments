@@ -4,19 +4,21 @@ import sys
 import getopt
 import logging
 
+# Global options object
+options = {}
+
+# Global logger
+log = logging.getLogger(__name__)
 
 def main():
     args = parse_options(sys.argv[1:])
+    setupLogging()
 
-    # Set default logging level (this has no effect if logging.basicConfig has
-    # already been called as part of option parsing).
-    logging.basicConfig(level=logging.INFO)
-
-    logging.debug('This is a debug message')
-    logging.info('This is an info message')
-    logging.warning('This is a warning message')
-    logging.error('This is an error message')
-    logging.critical('This is a critical message')
+    log.debug('This is a debug message')
+    log.info('This is an info message')
+    log.warning('This is a warning message')
+    log.error('This is an error message')
+    log.critical('This is a critical message')
 
     if len(args) != 1:
         error("Invalid syntax")
@@ -25,6 +27,24 @@ def main():
 
     filename = args[0]
     print("Checking file " + filename)
+
+
+def setupLogging():
+    formatter = logging.Formatter(
+            '%(asctime)s %(levelname)s %(message)s', '%m-%d %H:%M:%S')
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(formatter)
+
+    if 'verbose' in options:
+        level = logging.DEBUG
+    elif 'quiet' in options:
+        level = logging.WARN
+    else:
+        level = logging.INFO
+
+    logger = logging.getLogger(__name__)
+    logger.setLevel(level)
+    logger.addHandler(handler)
 
 
 def usage():
@@ -41,6 +61,8 @@ def usage():
 
 def parse_options(args):
 
+    global options
+
     # Parse options using Getopt; display an error and exit if options could not
     # be parsed.
     try:
@@ -56,9 +78,9 @@ def parse_options(args):
             usage()
             sys.exit()
         elif opt == "-v":
-            logging.basicConfig(level=logging.DEBUG)
+            options['verbose'] = 1
         elif opt == "-q":
-            logging.basicConfig(level=logging.WARN)
+            options['quiet'] = 1
         else:
             assert False, "unhandled option"
 
