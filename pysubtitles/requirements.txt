@@ -20,4 +20,4 @@ six==1.13.0
 soupsieve==1.9.5
 stevedore==1.31.0
 subliminal==2.0.5
-urllib3==1.25.8
+urllib3==1.26.5
