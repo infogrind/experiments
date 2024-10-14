@@ -2,10 +2,21 @@
 #include <iostream>
 #include <optional>
 
+// The simplest type that I could come up with for a couroutine that returns a
+// value with co_return. (If the coroutine returned void, this would be even
+// simpler.)
+//
+// The promise object's type is the inner `Promise` type (aliased to the
+// mandatory `promise_type`). When the coroutine returns a value with co_return,
+// the value is passed to the promise object via return_value().
+//
+// The return value of final_suspend() determines what happens after the
+// coroutine calls co_return. If it is std::suspend_never, the coroutine is
+// immediately destroyed and the handle becomes invalid. Here we therefore
+// return std::suspend_always, so that the calling function can still access
+// the return value via the promise handle.
 class MyCoroutine {
  public:
-  struct Promise;
-
   struct Promise {
     std::optional<int> value;
 
@@ -40,28 +51,40 @@ class MyCoroutine {
   MyCoroutine(std::coroutine_handle<promise_type> handle) : handle_(handle) {}
 
   ~MyCoroutine() {
+    // Make sure that the promise object is destroyed, if it hasn't already
+    // happened. The test if(handle_) is likely useless, since the handle itself
+    // is like a pointer, it doesn't know if it points to something valid, and
+    // it isn't set to nullptr when the promise object is destroyed.
     if (handle_) {
+      std::cout << "Destroying the coroutine handle!\n";
       handle_.destroy();
     }
   }
 
+  // This accesses the value via the handle to the promise object.
   std::optional<int> GetValue() {
     if (handle_) {
       return handle_.promise().value;
     } else {
+      // This will likely never happen, see also comment above.
       std::cout << "No handle!\n";
       return std::nullopt;
     }
   }
 
+  // Needed because initial_suspend returns std::suspend_always.
   void Resume() {
     if (handle_) {
+      // Again, as in the example above, the test if(handle_) is likely useless.
       handle_.resume();
     }
   }
 
  private:
+  // Through this handle can the coroutine object access the promise object.
   std::coroutine_handle<promise_type> handle_;
+
+  // This is how we store the value for later retrieval.
   std::optional<int> value_;
 };
 
