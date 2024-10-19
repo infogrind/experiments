@@ -88,9 +88,20 @@ class MyCoroutine {
   std::optional<int> value_;
 };
 
+// This is the simplest version I could find of an awaitable. Because
+// await_ready() returns true, the coroutine is not suspended when calling
+// co_await on the awaitable, but instead it immediately calls await_resume.
+struct MyAwaitable {
+  bool await_ready() { return true; }
+
+  void await_suspend(std::coroutine_handle<>) {}
+
+  int await_resume() noexcept { return 42; }
+};
+
 MyCoroutine coro() {
   // co_await std::suspend_never();
-  co_return 42;
+  co_return co_await MyAwaitable();
 }
 
 int main() {
