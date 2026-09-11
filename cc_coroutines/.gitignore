@@ -1,3 +1,5 @@
 main.o
 main.dSYM/
 main
+main_asan
+main_asan.dSYM/
